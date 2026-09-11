@@ -48,34 +48,34 @@ HEIGHT = 700
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Rundown Scrabble")
-clock = pygame.time.Clock()
+clock = pygame.time.Clock() # clock from documantation
 
 # Fonts used throughout the UI
-font_big   = pygame.font.SysFont("Arial", 44, bold=True)
-font_med   = pygame.font.SysFont("Arial", 30, bold=True)
+font_big = pygame.font.SysFont("Arial", 44, bold=True)
+font_med = pygame.font.SysFont("Arial", 30, bold=True)
 font_small = pygame.font.SysFont("Arial", 22)
-font_tiny  = pygame.font.SysFont("Arial", 14)
+font_tiny = pygame.font.SysFont("Arial", 14)
 
 # Colours
-BLACK      = (0, 0, 0)
-WHITE      = (255, 255, 255)
-RED        = (200, 0, 0)
-BLUE       = (0, 0, 200)
-GRAY       = (130, 130, 130)
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (200, 0, 0)
+BLUE = (0, 0, 200)
+GRAY = (130, 130, 130)
 LIGHT_GRAY = (220, 220, 215)
-CREAM      = (255, 248, 220)
-TAN        = (210, 180, 140)
-DARK_TAN   = (160, 120, 70)
-YELLOW     = (255, 215, 0)
-PINK       = (255, 182, 193)
-BROWN      = (101, 67, 33)
+CREAM = (255, 248, 220)
+TAN = (210, 180, 140)
+DARK_TAN = (160, 120, 70)
+YELLOW = (255, 215, 0)
+PINK = (255, 182, 193)
+BROWN = (101, 67, 33)
 
 # Game states (which screen we are on)
-STATE_MENU   = 0
+STATE_MENU = 0
 STATE_SELECT = 1
-STATE_GAME   = 2
-STATE_HELP   = 3
-STATE_QUIT   = 4
+STATE_GAME = 2
+STATE_HELP = 3
+STATE_QUIT = 4
 
 # Standard Scrabble letter point values
 LETTER_VALUES = {
@@ -95,10 +95,10 @@ LETTER_DIST = {
 
 # Board layout numbers
 BOARD_SIZE = 15
-CELL       = 36
-BOARD_X    = 10
-BOARD_Y    = 20
-PANEL_X    = BOARD_X + BOARD_SIZE * CELL + 20
+CELL = 36
+BOARD_X = 10
+BOARD_Y = 20
+PANEL_X = BOARD_X + BOARD_SIZE * CELL + 20
 
 # A colour to tint each player's score line
 PLAYER_COLORS = [
@@ -138,6 +138,37 @@ except Exception as _e:
 # Semi-transparent dark overlay blitted over the photo so text stays readable.
 _dark_overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
 _dark_overlay.fill((0, 0, 0, 110))
+
+# Letter tile PNGs: A.png through Z.png in the game folder.
+# Falls back to drawn coloured rectangles if any file is missing.
+_tile_imgs_board = {}   # letter -> Surface scaled to board cell size
+_tile_imgs_hand  = {}   # letter -> Surface scaled to hand tile size
+for _letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+    try:
+        _img = pygame.image.load(_letter + ".png")
+        _tile_imgs_board[_letter] = pygame.transform.scale(_img, (CELL - 1, CELL - 1))
+        _tile_imgs_hand[_letter]  = pygame.transform.scale(_img, (50, 52))
+    except Exception:
+        pass
+print(">>> Letter tile PNGs loaded:", len(_tile_imgs_board), "/ 26")
+
+# Snowflake PNG for the animated snow on the menu screen.
+_snowflake_img = None
+try:
+    _sf = pygame.image.load("snowflake.png")
+    _snowflake_img = pygame.transform.scale(_sf, (14, 14))
+    print(">>> Snowflake PNG loaded!")
+except Exception as _e:
+    print(">>> Snowflake PNG not found, using circles:", _e)
+
+# Board cell PNG for empty squares on the playing board.
+_board_cell_img = None
+try:
+    _bc = pygame.image.load("board_cell.png")
+    _board_cell_img = pygame.transform.scale(_bc, (CELL - 1, CELL - 1))
+    print(">>> Board cell PNG loaded!")
+except Exception as _e:
+    print(">>> Board cell PNG not found, using rectangles:", _e)
 
 
 # 2. WORD LIST SETUP
@@ -225,18 +256,18 @@ def get_mountain_fact(word):
 # 3. GAME DATA
 # These globals hold the whole state of the current game. They are set up
 # properly by setup_game() when the player presses START GAME.
-board              = []
-tile_bag           = []
-num_players        = 2
-player_hands       = []
-player_scores      = []
-current_player     = 0
-selected_tile      = -1
-placed_this_turn   = []
-game_message       = ""
-game_over          = False
+board = []
+tile_bag = []
+num_players = 2
+player_hands = []
+player_scores = []
+current_player = 0
+selected_tile = -1
+placed_this_turn = []
+game_message = ""
+game_over = False
 consecutive_passes = 0
-eco_fact           = ""   # the latest mountain-ecosystem fact to show in the panel
+eco_fact = ""   # the latest mountain-ecosystem fact to show in the panel
 
 
 # 4. GAME HELPER FUNCTIONS
@@ -258,17 +289,17 @@ def setup_game(how_many_players):
     global current_player, selected_tile, placed_this_turn
     global game_message, game_over, consecutive_passes, eco_fact
 
-    num_players        = how_many_players
-    tile_bag           = make_bag()
-    player_hands       = []
-    player_scores      = []
-    current_player     = 0
-    selected_tile      = -1
-    placed_this_turn   = []
-    game_over          = False
+    num_players = how_many_players
+    tile_bag = make_bag()
+    player_hands = []
+    player_scores = []
+    current_player = 0
+    selected_tile = -1
+    placed_this_turn = []
+    game_over = False
     consecutive_passes = 0
-    eco_fact           = ""
-    game_message       = "Player 1's turn!  Spell mountain words for bonus points!"
+    eco_fact = ""
+    game_message = "Player 1's turn!  Spell mountain words for bonus points!"
 
     # Build an empty board as one flat (1D) list of 225 squares.
     # None means the square is empty.
@@ -569,7 +600,11 @@ def draw_snow():
     # down a little, and sends it back to the top once it falls off the screen.
     # Because the menu is redrawn 60 times a second, this makes the snow fall.
     for i in range(len(snow_x)):
-        pygame.draw.circle(screen, WHITE, (snow_x[i], snow_y[i]), 2)
+        if _snowflake_img is not None:
+            # Centre the snowflake image on the flake's position.
+            screen.blit(_snowflake_img, (snow_x[i] - 7, snow_y[i] - 7))
+        else:
+            pygame.draw.circle(screen, WHITE, (snow_x[i], snow_y[i]), 2)
         snow_y[i] = snow_y[i] + 2
         if snow_y[i] > HEIGHT:
             snow_y[i] = 0
@@ -757,17 +792,23 @@ def draw_board():
             letter = board[index_of(row, col)]
 
             if letter is not None:
-                # A tile is here. Tiles placed this turn are yellow, older ones tan.
-                if (row, col) in placed_this_turn:
-                    pygame.draw.rect(screen, YELLOW, cell_rect)
+                # A tile is here: use the PNG image if loaded, else draw a rectangle.
+                if letter in _tile_imgs_board:
+                    screen.blit(_tile_imgs_board[letter], (x, y))
+                    if (row, col) in placed_this_turn:
+                        _hl = pygame.Surface((CELL - 1, CELL - 1), pygame.SRCALPHA)
+                        _hl.fill((255, 215, 0, 100))
+                        screen.blit(_hl, (x, y))
                 else:
-                    pygame.draw.rect(screen, TAN, cell_rect)
-                pygame.draw.rect(screen, DARK_TAN, cell_rect, 1)
-
-                draw_text(letter, font_small, BLACK,
-                          x + CELL // 2 - font_small.size(letter)[0] // 2, y + 3)
-                draw_text(str(LETTER_VALUES[letter]), font_tiny, (80, 80, 80),
-                          x + CELL - 11, y + CELL - 14)
+                    if (row, col) in placed_this_turn:
+                        pygame.draw.rect(screen, YELLOW, cell_rect)
+                    else:
+                        pygame.draw.rect(screen, TAN, cell_rect)
+                    pygame.draw.rect(screen, DARK_TAN, cell_rect, 1)
+                    draw_text(letter, font_small, BLACK,
+                              x + CELL // 2 - font_small.size(letter)[0] // 2, y + 3)
+                    draw_text(str(LETTER_VALUES[letter]), font_tiny, (80, 80, 80),
+                              x + CELL - 11, y + CELL - 14)
 
             elif row == 7 and col == 7:
                 # The centre star square.
@@ -776,8 +817,11 @@ def draw_board():
                           x + CELL // 2 - font_small.size("*")[0] // 2,
                           y + CELL // 2 - font_small.size("*")[1] // 2)
             else:
-                # An empty square.
-                pygame.draw.rect(screen, CREAM, cell_rect)
+                # An empty square: use the board cell PNG if loaded, else plain colour.
+                if _board_cell_img is not None:
+                    screen.blit(_board_cell_img, (x, y))
+                else:
+                    pygame.draw.rect(screen, CREAM, cell_rect)
 
             pygame.draw.rect(screen, (180, 160, 120), cell_rect, 1)
 
@@ -832,16 +876,22 @@ def draw_panel(mouse_x, mouse_y):
         tile_rect = pygame.Rect(tx, ty, 50, 52)
         tile_rects.append(tile_rect)
 
-        if i == selected_tile:
-            pygame.draw.rect(screen, YELLOW, tile_rect)
+        if letter in _tile_imgs_hand:
+            screen.blit(_tile_imgs_hand[letter], (tx, ty))
+            if i == selected_tile:
+                _hl = pygame.Surface((50, 52), pygame.SRCALPHA)
+                _hl.fill((255, 215, 0, 100))
+                screen.blit(_hl, (tx, ty))
         else:
-            pygame.draw.rect(screen, TAN, tile_rect)
-        pygame.draw.rect(screen, DARK_TAN, tile_rect, 2)
-
-        draw_text(letter, font_med, BLACK,
-                  tx + 25 - font_med.size(letter)[0] // 2, ty + 7)
-        draw_text(str(LETTER_VALUES[letter]), font_tiny, (80, 80, 80),
-                  tx + 38, ty + 37)
+            if i == selected_tile:
+                pygame.draw.rect(screen, YELLOW, tile_rect)
+            else:
+                pygame.draw.rect(screen, TAN, tile_rect)
+            pygame.draw.rect(screen, DARK_TAN, tile_rect, 2)
+            draw_text(letter, font_med, BLACK,
+                      tx + 25 - font_med.size(letter)[0] // 2, ty + 7)
+            draw_text(str(LETTER_VALUES[letter]), font_tiny, (80, 80, 80),
+                      tx + 38, ty + 37)
 
     py = py + 62
 
